@@ -12,6 +12,18 @@ export const loginUser = async (email, password) => {
   return data;
 };
 
+export const checkEmailExists = async (email) => {
+  const res = await fetch(`${API_BASE}/auth/verify-email`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email }),
+  });
+
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Email verification failed");
+  return data.exists; // true or false
+};
+
 export const registerUser = async (email, password) => {
   const res = await fetch(`${API_BASE}/auth/register`, {
     method: "POST",

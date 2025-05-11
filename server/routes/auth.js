@@ -44,4 +44,20 @@ router.post("/login", async (req, res) => {
   }
 });
 
+
+// POST /api/auth/verify-email
+router.post("/verify-email", async (req, res) => {
+  const { email } = req.body;
+  if (!email) {
+    return res.status(400).json({ message: "Email is required" });
+  }
+
+  try {
+    const user = await User.findOne({ email });
+    return res.json({ exists: !!user });
+  } catch (err) {
+    return res.status(500).json({ message: "Server error" });
+  }
+});
+
 export default router;

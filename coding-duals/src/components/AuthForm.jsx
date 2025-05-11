@@ -22,6 +22,7 @@ export default function AuthForm() {
         : await registerUser(formData.email, formData.password);
 
       localStorage.setItem("token", token);
+      localStorage.setItem("email", formData.email);
       navigate("/dashboard");
     } catch (err) {
       setError(err.message);
