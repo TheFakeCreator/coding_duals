@@ -4,6 +4,7 @@ import mongoose from "mongoose";
 import cors from "cors";
 import http from "http";
 import { Server as SocketIOServer } from "socket.io";
+import morgan from "morgan";
 
 import connectDB from "./config/db.js";
 import authRoutes from "./routes/auth.js";
@@ -28,6 +29,7 @@ const io = new SocketIOServer(server, {
 // Middleware
 app.use(cors());
 app.use(express.json());
+app.use(morgan("dev"));
 
 // Routes
 app.use("/api/auth", authRoutes);
@@ -38,8 +40,9 @@ io.on("connection", (socket) => {
   console.log(`✅ Client connected: ${socket.id}`);
 
   // Join a specific duel room
-  socket.on("join-duel", (duelId) => {
+  socket.on("join-duel", ({ duelId, peerId }) => {
     socket.join(duelId);
+    socket.to(duelId).emit("peer-connected", peerId);
     console.log(`📥 Socket ${socket.id} joined duel ${duelId}`);
   });
 
@@ -51,6 +54,11 @@ io.on("connection", (socket) => {
   socket.on("disconnect", () => {
     console.log(`👋 Client disconnected: ${socket.id}`);
   });
+});
+
+// Add error handling for unhandled routes
+app.use((req, res) => {
+  res.status(404).send("Not Found");
 });
 
 // Start the server

@@ -1,4 +1,20 @@
-const API_BASE = "http://localhost:5000/api";
+// Updated to use Vite's environment variables
+const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:5000/api";
+
+// Added error handling for network failures
+export const fetchWithErrorHandling = async (url, options = {}) => {
+  try {
+    const res = await fetch(url, options);
+    if (!res.ok) {
+      const errorData = await res.json();
+      throw new Error(errorData.message || "Network error");
+    }
+    return await res.json();
+  } catch (err) {
+    console.error("API Error:", err.message);
+    throw err;
+  }
+};
 
 export const loginUser = async (email, password) => {
   const res = await fetch(`${API_BASE}/auth/login`, {
@@ -51,4 +67,21 @@ export const createDuel = async (opponentEmail, difficulty) => {
   const data = await res.json();
   if (!res.ok) throw new Error(data.message || "Failed to create duel");
   return data; // Contains duelId
+};
+
+export const submitCode = async (duelId, code, language) => {
+  const token = localStorage.getItem("token");
+
+  const res = await fetch("http://localhost:5000/api/duel/submit", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: token,
+    },
+    body: JSON.stringify({ duelId, code, language }), // Pass language here
+  });
+
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Submission failed");
+  return data;
 };
