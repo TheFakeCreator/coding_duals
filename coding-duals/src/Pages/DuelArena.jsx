@@ -1,6 +1,7 @@
 import { useParams } from "react-router-dom";
 import { useEffect, useState, useRef } from "react";
 import Editor from "@monaco-editor/react";
+import socket from "../Utils/socket"; // Import the socket instance
 
 export default function DuelArena() {
   const { id } = useParams();
@@ -13,10 +14,25 @@ export default function DuelArena() {
   });
 
   const [userCode, setUserCode] = useState("// Your code here");
-  const [opponentCode] = useState("// Opponent's code will appear here");
+  const [opponentCode, setOpponentCode] = useState("// Opponent's code will appear here");
 
   const [timeLeft, setTimeLeft] = useState(15 * 60); // 15 mins in seconds
   const timerRef = useRef(null);
+
+  useEffect(() => {
+    // Emit "join-duel" when the component is mounted
+    socket.emit("join-duel", id);
+
+    // Listen for the opponent's code updates
+    socket.on("code-update", (incomingCode) => {
+      setOpponentCode(incomingCode);
+    });
+
+    // Clean up the event listener on component unmount
+    return () => {
+      socket.off("code-update");
+    };
+  }, [id]);
 
   useEffect(() => {
     timerRef.current = setInterval(() => {
@@ -40,6 +56,12 @@ export default function DuelArena() {
       .padStart(2, "0");
     const s = (seconds % 60).toString().padStart(2, "0");
     return `${m}:${s}`;
+  };
+
+  const handleCodeChange = (value) => {
+    setUserCode(value);
+    // Emit the code change to the opponent
+    socket.emit("code-change", { duelId: id, code: value });
   };
 
   useEffect(() => {
@@ -79,7 +101,7 @@ export default function DuelArena() {
             defaultLanguage="javascript"
             theme="vs-dark"
             value={userCode}
-            onChange={(value) => setUserCode(value)}
+            onChange={handleCodeChange}
             options={{ fontSize: 14 }}
           />
         </div>
