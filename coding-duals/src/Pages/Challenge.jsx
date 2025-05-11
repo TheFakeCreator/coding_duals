@@ -1,27 +1,37 @@
 // src/pages/Challenge.jsx
 import { useState } from "react";
-import { createDuel } from "../Utils/api";
+import { createDuel,checkEmailExists } from "../Utils/api";
 import { useNavigate } from "react-router-dom";
 
 export default function Challenge() {
   const [email, setEmail] = useState("");
   const [difficulty, setDifficulty] = useState("easy");
   const [error, setError] = useState("");
+  const [valid, setValid] = useState(false);
   const navigate = useNavigate();
+  const user=localStorage.getItem("email");
+  const opp=email;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
+    if(user!=opp && await checkEmailExists(opp)){
+      try {
+        const { duelId } = await createDuel(email, difficulty);
+        console.log("Duel Created:", duelId);
 
-    try {
-      const { duelId } = await createDuel(email, difficulty);
-      console.log("Duel Created:", duelId);
+        // Later: Navigate to duel room
+        navigate(`/duel/${duelId}`);
+      } catch (err) {
+        setError(err.message);
+      }
 
-      // Later: Navigate to duel room
-      navigate(`/duel/${duelId}`);
-    } catch (err) {
-      setError(err.message);
     }
+    else{
+      setValid(true);
+    }
+    
+    
   };
 
   return (
@@ -35,6 +45,10 @@ export default function Challenge() {
         </h1>
 
         {error && <p className="text-red-400 text-sm mb-4">{error}</p>}
+
+        {
+          valid && <p className="text-red-400 text-m mb-4">Enter a Valid Email</p>
+        }
 
         <label className="block mb-2 text-sm text-gray-300">
           Friend's Email
