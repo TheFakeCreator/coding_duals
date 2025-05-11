@@ -1,4 +1,3 @@
-// server/routes/duel.js
 import express from "express";
 import jwt from "jsonwebtoken";
 import Duel from "../models/Duel.js";
@@ -43,5 +42,35 @@ router.post("/create", authMiddleware, async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 });
+
+// POST /api/duel/submit
+router.post("/submit", authMiddleware, async (req, res) => {
+  const { duelId, code } = req.body;
+
+  try {
+    const duel = await Duel.findById(duelId);
+    if (!duel) return res.status(404).json({ message: "Duel not found" });
+
+    if (duel.status !== "active") {
+      return res.status(400).json({ message: "Duel is not active" });
+    }
+
+    // Dummy evaluation logic (replace with actual code execution)
+    const expectedOutput = "[0,1]"; // Example expected output
+    const userOutput = evaluateCode(code, duel.problem.input); // Replace with actual evaluation logic
+
+    const isCorrect = userOutput === expectedOutput;
+
+    res.json({ correct: isCorrect });
+  } catch (err) {
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// Dummy function to simulate code evaluation
+function evaluateCode(code, input) {
+  // Replace this with actual code execution logic
+  return "[0,1]"; // Example output
+}
 
 export default router;

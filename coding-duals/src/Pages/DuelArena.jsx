@@ -1,6 +1,7 @@
 import { useParams } from "react-router-dom";
 import { useEffect, useState, useRef } from "react";
 import Editor from "@monaco-editor/react";
+import axios from "axios"; // Import axios for API calls
 
 export default function DuelArena() {
   const { id } = useParams();
@@ -16,15 +17,43 @@ export default function DuelArena() {
   const [opponentCode] = useState("// Opponent's code will appear here");
 
   const [timeLeft, setTimeLeft] = useState(15 * 60); // 15 mins in seconds
+  const [submissionStatus, setSubmissionStatus] = useState(""); // Feedback for submission
   const timerRef = useRef(null);
 
+  // Function to handle code submission
+  const submitCode = async () => {
+    try {
+      console.log("Submitting code...");
+      const response = await axios.post(
+        "http://localhost:5000/api/duel/submit",
+        {
+          duelId: id,
+          code: userCode,
+        }
+      );
+      console.log("Code submitted successfully:", response.data);
+
+      // Check if the code is correct
+      if (response.data.correct) {
+        setSubmissionStatus("✅ Correct! Proceed to the next question.");
+        // Logic to load the next question can go here
+      } else {
+        setSubmissionStatus("❌ Incorrect. Try again.");
+      }
+    } catch (error) {
+      console.error("Error submitting code:", error);
+      setSubmissionStatus("❌ Submission failed. Please try again.");
+    }
+  };
+
+  // Timer logic
   useEffect(() => {
     timerRef.current = setInterval(() => {
       setTimeLeft((prev) => {
         if (prev <= 1) {
           clearInterval(timerRef.current);
           console.log("⏰ Time’s up! Duel over.");
-          // Later: auto-submit or redirect
+          submitCode(); // Auto-submit code when time runs out
           return 0;
         }
         return prev - 1;
@@ -82,6 +111,15 @@ export default function DuelArena() {
             onChange={(value) => setUserCode(value)}
             options={{ fontSize: 14 }}
           />
+          <button
+            onClick={submitCode}
+            className="mt-4 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+          >
+            Submit Code
+          </button>
+          {submissionStatus && (
+            <p className="mt-2 text-sm text-gray-300">{submissionStatus}</p>
+          )}
         </div>
 
         {/* Opponent */}

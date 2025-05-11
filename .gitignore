@@ -1,0 +1,4 @@
+server/.env
+node_modules
+coding-duals/node_modules
+server/node_modules
