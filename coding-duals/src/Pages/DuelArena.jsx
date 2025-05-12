@@ -16,7 +16,7 @@ export default function DuelArena() {
 
   const [userCode, setUserCode] = useState("// Your code here");
   const [opponentCode, setOpponentCode] = useState(
-    "// Opponent's code will appear here"
+    "// Waiting for opponent..."
   );
 
   const [timeLeft, setTimeLeft] = useState(15 * 60); // 15 mins in seconds
