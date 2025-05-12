@@ -29,14 +29,21 @@ export const loginUser = async (email, password) => {
   return data;
 };
 
+// Remove the direct interaction with the Duel model
 export const deleteDuelById = async (duelId) => {
-  try {
-    const deletedDuel = await Duel.findByIdAndDelete(duelId);
-    return deletedDuel;
-  } catch (error) {
-    console.error("Error deleting duel:", error.message);
-    throw error;
+  const res = await fetch(`${API_BASE}/duel/delete/${duelId}`, {
+    method: "DELETE",
+    headers: {
+      Authorization: `Bearer ${localStorage.getItem("token")}`,
+    },
+  });
+
+  if (!res.ok) {
+    const errorData = await res.json();
+    throw new Error(errorData.message || "Failed to delete duel");
   }
+
+  return await res.json();
 };
 
 export const checkEmailExists = async (email) => {

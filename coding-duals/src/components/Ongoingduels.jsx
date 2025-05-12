@@ -10,11 +10,14 @@ const OngoingDuels = () => {
     const fetchDuels = async () => {
       try {
         const token = localStorage.getItem("token");
-        const res = await axios.get("http://localhost:5000/api/duel/ongoing/all", {
-          headers: {
-            Authorization: token,
-          },
-        });
+        const res = await axios.get(
+          "http://localhost:5000/api/duel/ongoing/all",
+          {
+            headers: {
+              Authorization: token,
+            },
+          }
+        );
         setDuels(res.data);
       } catch (err) {
         console.error("Failed to fetch all duels:", err.message);
@@ -37,8 +40,9 @@ const OngoingDuels = () => {
               className="flex justify-between items-center p-3 bg-black rounded-lg"
             >
               <span>
-                <strong>{duel.challenger.email}</strong> vs <strong>{duel.opponentEmail}</strong>{" "}
-                - Difficulty: <span className="capitalize">{duel.difficulty}</span>
+                <strong>{duel.challenger?.email || "Unknown"}</strong> vs{" "}
+                <strong>{duel.opponentEmail}</strong> - Difficulty:{" "}
+                <span className="capitalize">{duel.difficulty}</span>
               </span>
               <button
                 onClick={() => navigate(`/watch/${duel._id}`)}

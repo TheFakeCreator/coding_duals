@@ -38,7 +38,15 @@ app.use("/api/auth", authRoutes);
 app.use("/api/duel", duelRoutes);
 
 // Socket.IO logic
+const duelTimers = new Map(); // Store timers for each duel
+
 io.on("connection", (socket) => {
+  const email = socket.handshake.query.email; // Assuming email is sent during connection
+  if (email) {
+    socket.join(email);
+    console.log(`User with email ${email} joined their room.`);
+  }
+
   console.log("🟢 New client connected:", socket.id);
 
   // Register socket with user's email
@@ -49,9 +57,28 @@ io.on("connection", (socket) => {
 
   // Join duel room
   socket.on("join-duel", ({ duelId, peerId }) => {
-    socket.join(duelId);
-    socket.to(duelId).emit("peer-connected", peerId);
-    console.log(`📥 Socket ${socket.id} joined duel ${duelId}`);
+    socket.join(duelId); // Join the duel room for real-time updates
+    socket.to(duelId).emit("opponent-joined", { peerId }); // Notify the opponent of the connection
+
+    // Check if the room has two participants and start the timer
+    const room = io.sockets.adapter.rooms.get(duelId);
+    if (room && room.size === 2) {
+      if (!duelTimers.has(duelId)) {
+        duelTimers.set(duelId, {
+          startTime: Date.now(),
+          duration: 15 * 60 * 1000,
+        });
+      }
+      const timerData = duelTimers.get(duelId);
+      io.to(duelId).emit("start-timer", timerData);
+    }
+  });
+
+  socket.on("request-timer", ({ duelId }) => {
+    if (duelTimers.has(duelId)) {
+      const timerData = duelTimers.get(duelId);
+      io.to(socket.id).emit("start-timer", timerData);
+    }
   });
 
   // In your socket.io server setup
@@ -74,18 +101,38 @@ io.on("connection", (socket) => {
     socket.to(duelId).emit("new-watcher", { watcherId: socket.id });
   });
 
-  socket.on("join-duel", ({ duelId, peerId }) => {
-    socket.join(duelId); // Join the duel room for real-time updates
-    socket.to(duelId).emit("opponent-joined", { peerId }); // Notify the opponent of the connection
-  });
-
   // Handle real-time code sync
   socket.on("code-change", ({ email, duelId, code }) => {
     socket.to(duelId).emit("code-update", { email, code });
   });
 
+  socket.on("submit-code", ({ duelId, code, language }) => {
+    // Notify the other user that the opponent has submitted their code
+    socket.to(duelId).emit("opponent-submitted", {
+      message: "Your opponent has submitted their code.",
+    });
+
+    // Evaluate the code (mocked for now)
+    const isCorrect = true; // Replace with actual evaluation logic
+
+    if (isCorrect) {
+      io.to(duelId).emit("code-submitted", {
+        message: "🎉 Code is correct! The duel is over.",
+        winner: socket.id, // Notify the winner
+      });
+      io.to(duelId).emit("duel-terminated", {
+        message: "The duel has been terminated. Winner: " + socket.id,
+      });
+    } else {
+      io.to(duelId).emit("code-submitted", {
+        message: "❌ Code is incorrect. Try again!",
+      });
+    }
+  });
+
   // Disconnect
   socket.on("disconnect", () => {
+    console.log(`User with email ${email} disconnected.`);
     console.log("🔴 Client disconnected:", socket.id);
   });
 });

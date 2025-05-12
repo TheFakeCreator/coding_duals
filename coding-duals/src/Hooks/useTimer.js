@@ -4,8 +4,9 @@ export default function useTimer(initialTime) {
   const [timeLeft, setTimeLeft] = useState(initialTime);
   const timerRef = useRef(null);
 
-  const startTimer = () => {
-    if (timerRef.current) return; // Prevent multiple timers
+  const startTimer = (remainingTime = initialTime) => {
+    if (timerRef.current) return;
+    setTimeLeft(remainingTime);
     timerRef.current = setInterval(() => {
       setTimeLeft((prev) => {
         if (prev <= 1) {

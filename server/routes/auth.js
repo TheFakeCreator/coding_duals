@@ -44,7 +44,6 @@ router.post("/login", async (req, res) => {
   }
 });
 
-
 // POST /api/auth/verify-email
 router.post("/verify-email", async (req, res) => {
   const { email } = req.body;

@@ -17,6 +17,11 @@ export default function AuthForm() {
     e.preventDefault();
     setError("");
 
+    if (!formData.email || !formData.password) {
+      setError("Email and password are required");
+      return;
+    }
+
     try {
       const { token } = isLogin
         ? await loginUser(formData.email, formData.password)

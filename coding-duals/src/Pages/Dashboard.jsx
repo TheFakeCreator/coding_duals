@@ -1,12 +1,8 @@
 // src/pages/Dashboard.jsx
 import { useNavigate } from "react-router-dom";
-import { useEffect,useState } from "react";
+import { useEffect, useState } from "react";
 import socket from "../Utils/socket";
 import OngoingDuels from "../components/Ongoingduels";
-
-
-
-
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -14,7 +10,7 @@ export default function Dashboard() {
 
   const handleLogout = () => {
     localStorage.removeItem("token");
-    navigate("/login");
+    navigate("/");
   };
 
   const handleChallengeFriend = () => {
@@ -28,7 +24,6 @@ export default function Dashboard() {
 
     return () => socket.off("challenge-requested");
   }, []);
-
 
   return (
     <div className="min-h-screen bg-gray-900 text-white p-6">
@@ -61,8 +56,15 @@ export default function Dashboard() {
       {incomingChallenge && (
         <div className="fixed bottom-6 right-6 bg-white border border-gray-300 shadow-lg rounded-2xl p-4 w-80 z-50">
           <p className="text-gray-800 text-base mb-3">
-            <span className="font-semibold text-indigo-600">{incomingChallenge.from}</span> challenged you to a 
-            <span className="font-medium text-gray-700"> {incomingChallenge.difficulty}</span> duel!
+            <span className="font-semibold text-indigo-600">
+              {incomingChallenge.from || "Unknown"}
+            </span>{" "}
+            challenged you to a
+            <span className="font-medium text-gray-700">
+              {" "}
+              {incomingChallenge.difficulty}
+            </span>{" "}
+            duel!
           </p>
           <button
             onClick={() => navigate(`/duel/${incomingChallenge.duelId}`)}
@@ -74,7 +76,6 @@ export default function Dashboard() {
       )}
 
       <OngoingDuels />
-
     </div>
   );
 }

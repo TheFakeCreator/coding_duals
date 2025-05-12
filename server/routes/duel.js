@@ -10,7 +10,6 @@ import { body, validationResult } from "express-validator";
 
 const router = express.Router();
 
-
 // Middleware to verify JWT
 const authMiddleware = (req, res, next) => {
   const token = req.headers.authorization;
@@ -42,7 +41,12 @@ router.post("/create", authMiddleware, async (req, res) => {
       difficulty,
       questions,
     });
-    const io = req.app.get("io"); 
+    const io = req.app.get("io");
+
+    if (!challenger.email) {
+      return res.status(400).json({ message: "Challenger email is missing" });
+    }
+
     io.to(opponentEmail).emit("challenge-requested", {
       from: challenger.email,
       difficulty,
@@ -71,7 +75,6 @@ router.get("/ongoing/all", authMiddleware, async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 });
-
 
 router.get("/:id/opponent-email", async (req, res) => {
   try {
@@ -224,5 +227,20 @@ router.post(
     }
   }
 );
+
+// Add a new endpoint to delete a duel by ID
+router.delete("/delete/:id", authMiddleware, async (req, res) => {
+  const { id } = req.params;
+  try {
+    const deletedDuel = await Duel.findByIdAndDelete(id);
+    if (!deletedDuel) {
+      return res.status(404).json({ message: "Duel not found" });
+    }
+    res.json({ message: "Duel deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting duel:", error.message);
+    res.status(500).json({ message: "Server error" });
+  }
+});
 
 export default router;

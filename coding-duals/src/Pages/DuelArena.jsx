@@ -18,7 +18,7 @@ export default function DuelArena() {
     output: "[0,1]",
   });
   const [language, setLanguage] = useState("cpp");
-  const [userCode, setUserCode] = useState("// Your code here");
+  const [userCode, setUserCode] = useState("Your code here");
   const [opponentCode, setOpponentCode] = useState(
     "// Opponent's code will appear here"
   );
@@ -26,6 +26,7 @@ export default function DuelArena() {
   const [submissionStatus, setSubmissionStatus] = useState("");
   const [myStream, setMyStream] = useState(null);
   const [remoteStream, setRemoteStream] = useState(null);
+  const [opponentJoined, setOpponentJoined] = useState(false);
 
   const myVideoRef = useRef();
   const remoteVideoRef = useRef();
@@ -33,12 +34,32 @@ export default function DuelArena() {
   const { timeLeft, startTimer, stopTimer } = useTimer(15 * 60);
 
   useEffect(() => {
-    startTimer();
-    return () => stopTimer();
-  }, []);
+    socket.on("start-timer", ({ startTime, duration }) => {
+      const elapsed = Date.now() - startTime;
+      const remainingTime = Math.max(duration - elapsed, 0);
+      setOpponentJoined(true);
+      startTimer(remainingTime / 1000); // Start timer with remaining time in seconds
+    });
+
+    socket.emit("request-timer", { duelId: id }); // Request current timer state on load
+
+    return () => {
+      socket.off("start-timer");
+    };
+  }, [id]);
 
   useEffect(() => {
     socket.emit("join-duel", id);
+    socket.on("opponent-joined", () => {
+      socket.emit("start-timer", id); // Notify server to start timer for both
+    });
+
+    return () => {
+      socket.off("opponent-joined");
+    };
+  }, [id]);
+
+  useEffect(() => {
     socket.on("code-update", ({ email, code }) => {
       setOpponentCode(code); //OPPONENT CODE
     });
@@ -91,7 +112,9 @@ export default function DuelArena() {
     const m = Math.floor(seconds / 60)
       .toString()
       .padStart(2, "0");
-    const s = (seconds % 60).toString().padStart(2, "0");
+    const s = Math.floor(seconds % 60)
+      .toString()
+      .padStart(2, "0");
     return `${m}:${s}`;
   };
 
@@ -113,12 +136,23 @@ export default function DuelArena() {
 
   useEffect(() => {
     socket.on("duel-terminated", ({ message }) => {
-      alert(message); // Optional: show termination reason
+      alert(message); // Show termination reason and winner
       navigate("/dashboard"); // Automatically go back to dashboard
     });
 
     return () => {
       socket.off("duel-terminated");
+    };
+  }, []);
+
+  useEffect(() => {
+    socket.on("code-submitted", ({ message }) => {
+      alert(message); // Show the result to both users
+      navigate("/dashboard"); // Navigate to the dashboard
+    });
+
+    return () => {
+      socket.off("code-submitted");
     };
   }, []);
 
@@ -159,9 +193,15 @@ export default function DuelArena() {
       </div>
 
       <div className="mb-4 flex justify-between items-center">
-        <div className="text-lg font-medium">
-          ⏱️ Time Left: {formatTime(timeLeft)}
-        </div>
+        {opponentJoined ? (
+          <div className="text-lg font-medium">
+            ⏱️ Time Left: {formatTime(timeLeft)}
+          </div>
+        ) : (
+          <div className="text-lg font-medium text-yellow-400">
+            Waiting for opponent to join...
+          </div>
+        )}
         <div className="text-right">
           <p className="text-sm text-gray-300">{problem.title}</p>
         </div>
@@ -232,13 +272,9 @@ export default function DuelArena() {
             playsInline
             className="w-full h-32 bg-black rounded mb-2 object-cover"
           />
-          <Editor
-            height="350px"
-            defaultLanguage="cpp"
-            theme="vs-dark"
-            value={opponentCode}
-            options={{ readOnly: true, fontSize: 14 }}
-          />
+          <div className="h-32 flex items-center justify-center bg-gray-700 text-gray-400 rounded">
+            Opponent is coding...
+          </div>
         </div>
       </div>
 
