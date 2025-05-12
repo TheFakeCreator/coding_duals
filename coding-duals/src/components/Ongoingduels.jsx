@@ -9,15 +9,15 @@ const OngoingDuels = () => {
   useEffect(() => {
     const fetchDuels = async () => {
       try {
-        const token = localStorage.getItem("token"); // JWT token
-        const res = await axios.get("http://localhost:5000/api/duel/ongoing", {
+        const token = localStorage.getItem("token");
+        const res = await axios.get("http://localhost:5000/api/duel/ongoing/all", {
           headers: {
             Authorization: token,
           },
         });
         setDuels(res.data);
       } catch (err) {
-        console.error("Failed to fetch duels:", err.message);
+        console.error("Failed to fetch all duels:", err.message);
       }
     };
 
@@ -26,7 +26,7 @@ const OngoingDuels = () => {
 
   return (
     <section className="p-6 bg-blue rounded-xl shadow-md mt-6">
-      <h2 className="text-xl font-semibold mb-4">Ongoing Duels</h2>
+      <h2 className="text-xl font-semibold mb-4">All Ongoing Duels</h2>
       {duels.length === 0 ? (
         <p className="text-gray-600">No ongoing duels</p>
       ) : (
@@ -37,20 +37,14 @@ const OngoingDuels = () => {
               className="flex justify-between items-center p-3 bg-black rounded-lg"
             >
               <span>
-                With{" "}
-                <strong>
-                  {duel.challenger.email === localStorage.getItem("email")
-                    ? duel.opponentEmail
-                    : duel.challenger.email}
-                </strong>{" "}
-                - Difficulty:{" "}
-                <span className="capitalize">{duel.difficulty}</span>
+                <strong>{duel.challenger.email}</strong> vs <strong>{duel.opponentEmail}</strong>{" "}
+                - Difficulty: <span className="capitalize">{duel.difficulty}</span>
               </span>
               <button
                 onClick={() => navigate(`/duel/${duel._id}`)}
                 className="bg-indigo-600 text-white px-4 py-1 rounded-lg hover:bg-indigo-700 transition"
               >
-                Resume
+                Watch
               </button>
             </li>
           ))}

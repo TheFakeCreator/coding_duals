@@ -14,7 +14,7 @@ export default function Dashboard() {
 
   const handleLogout = () => {
     localStorage.removeItem("token");
-    navigate("/login");
+    navigate("/");
   };
 
   const handleChallengeFriend = () => {
@@ -28,6 +28,7 @@ export default function Dashboard() {
 
     return () => socket.off("challenge-requested");
   }, []);
+  
 
 
   return (

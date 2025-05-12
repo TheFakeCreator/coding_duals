@@ -56,24 +56,23 @@ router.post("/create", authMiddleware, async (req, res) => {
 });
 
 // GET /api/duel/ongoing
-router.get("/ongoing", authMiddleware, async (req, res) => {
+router.get("/ongoing/all", authMiddleware, async (req, res) => {
   try {
-    const userId = req.user.id;
-
+    // Fetch all duels that are ongoing (status = pending) and sort by createdAt in descending order
     const duels = await Duel.find({
-      status: "pending",
-      $or: [
-        { challenger: userId },
-        { opponentEmail: req.user.email }
-      ]
-    }).populate("challenger", "email");
+      status: "pending", // or use status: { $in: ["active", "pending"] } to include all ongoing types
+    })
+      .populate("challenger", "email")
+      .sort({ createdAt: -1 }); // Sort by createdAt in descending order
 
     res.json(duels);
   } catch (err) {
-    console.error("Error fetching ongoing duels:", err.message);
+    console.error("Error fetching all ongoing duels:", err.message);
     res.status(500).json({ message: "Server error" });
   }
 });
+
+
 
 
 // POST /api/duel/submit

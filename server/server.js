@@ -5,6 +5,7 @@ import cors from "cors";
 import http from "http";
 import { Server as SocketIOServer } from "socket.io";
 import morgan from "morgan";
+import { deleteDuelById } from "../coding-duals/src/Utils/api.js";
 
 import connectDB from "./config/db.js";
 import authRoutes from "./routes/auth.js";
@@ -52,6 +53,21 @@ io.on("connection", (socket) => {
     socket.to(duelId).emit("peer-connected", peerId);
     console.log(`📥 Socket ${socket.id} joined duel ${duelId}`);
   });
+
+  // In your socket.io server setup
+  socket.on("terminate-duel", ({ duelId }) => {
+    // Handle duel termination logic (e.g., update duel status in DB)
+    deleteDuelById(duelId)
+      .then(() => {
+        // Notify both players that the duel is terminated
+        io.to(duelId).emit("duel-terminated", { message: "The duel has been terminated." });
+      })
+      .catch((err) => {
+        console.error("Error terminating duel:", err.message);
+      });
+  });
+
+ 
 
 
   // Handle real-time code sync
