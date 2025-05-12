@@ -6,6 +6,7 @@ import Dashboard from "./Pages/Dashboard";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Challenge from "./Pages/Challenge";
 import DuelArena from "./Pages/DuelArena";
+import WatchArena from "./Pages/WatchArena"
 
 export default function App() {
   return (
@@ -32,6 +33,14 @@ export default function App() {
         element={
           <ProtectedRoute>
             <DuelArena />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/watch/:id"
+        element={
+          <ProtectedRoute>
+            <WatchArena />
           </ProtectedRoute>
         }
       />

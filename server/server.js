@@ -11,6 +11,8 @@ import connectDB from "./config/db.js";
 import authRoutes from "./routes/auth.js";
 import duelRoutes from "./routes/duel.js";
 
+
+
 dotenv.config();
 connectDB();
 
@@ -67,12 +69,24 @@ io.on("connection", (socket) => {
       });
   });
 
+  socket.on("join-watch", ({ duelId }) => {
+    socket.join(duelId); // Join the watch room for the specific duel
+    socket.to(duelId).emit("new-watcher", { watcherId: socket.id });
+  });
+
+  socket.on("join-duel", ({ duelId, peerId }) => {
+    socket.join(duelId); // Join the duel room for real-time updates
+    socket.to(duelId).emit("opponent-joined", { peerId }); // Notify the opponent of the connection
+  });
+  
+
+
  
 
 
   // Handle real-time code sync
-  socket.on("code-change", ({ duelId, code }) => {
-    socket.to(duelId).emit("code-update", code);
+  socket.on("code-change", ({ email, duelId, code }) => {
+    socket.to(duelId).emit("code-update", {email, code});
   });
 
   // Disconnect

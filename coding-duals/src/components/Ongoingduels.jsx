@@ -41,7 +41,7 @@ const OngoingDuels = () => {
                 - Difficulty: <span className="capitalize">{duel.difficulty}</span>
               </span>
               <button
-                onClick={() => navigate(`/duel/${duel._id}`)}
+                onClick={() => navigate(`/watch/${duel._id}`)}
                 className="bg-indigo-600 text-white px-4 py-1 rounded-lg hover:bg-indigo-700 transition"
               >
                 Watch

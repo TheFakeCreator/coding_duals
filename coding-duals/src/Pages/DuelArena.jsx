@@ -37,8 +37,8 @@ export default function DuelArena() {
 
   useEffect(() => {
     socket.emit("join-duel", id);
-    socket.on("code-update", (incomingCode) => {
-      setOpponentCode(incomingCode);
+    socket.on("code-update", ({email,code}) => {
+      setOpponentCode(code);   //OPPONENT CODE
     });
     return () => {
       socket.off("code-update");
@@ -91,7 +91,8 @@ export default function DuelArena() {
 
   const handleCodeChange = (value) => {
     setUserCode(value);
-    socket.emit("code-change", { duelId: id, code: value });
+    socket.emit("code-change", {email: localStorage.getItem("email"), duelId: id, code: value, }); 
+    console.log(localStorage.getItem("email"));  //challenger code
   };
 
   const handleTerminateDuel = () => {

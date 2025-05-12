@@ -73,7 +73,20 @@ router.get("/ongoing/all", authMiddleware, async (req, res) => {
 });
 
 
+router.get("/:id/opponent-email", async (req, res) => {
+  try {
+    const duelId = req.params.id;
+    const duel = await Duel.findById(duelId);
+    console.log(duel);
+    if (!duel) {
+      return res.status(404).json({ message: "Duel not found" });
+    }
 
+    res.json({ opponentEmail: duel.opponentEmail });
+  } catch (err) {
+    res.status(500).json({ message: "Server error", error: err.message });
+  }
+});
 
 // POST /api/duel/submit
 router.post(
