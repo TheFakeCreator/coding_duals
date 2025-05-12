@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { loginUser, registerUser } from "../Utils/api.js";
 import { useNavigate } from "react-router-dom";
+import socket from "../Utils/socket";
 
 export default function AuthForm() {
   const [isLogin, setIsLogin] = useState(true);
@@ -23,6 +24,10 @@ export default function AuthForm() {
 
       localStorage.setItem("token", token);
       localStorage.setItem("email", formData.email);
+      if (formData.email) {
+        socket.emit("register-user", formData.email);
+        console.log("DONE");
+      }
       navigate("/dashboard");
     } catch (err) {
       setError(err.message);
