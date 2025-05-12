@@ -3,10 +3,13 @@ import jwt from "jsonwebtoken";
 import Duel from "../models/Duel.js";
 import User from "../models/User.js";
 import axios from "axios";
+import http from "http";
+import { Server as SocketIOServer } from "socket.io";
 // Added express-validator for request validation
 import { body, validationResult } from "express-validator";
 
 const router = express.Router();
+
 
 // Middleware to verify JWT
 const authMiddleware = (req, res, next) => {
@@ -39,12 +42,39 @@ router.post("/create", authMiddleware, async (req, res) => {
       difficulty,
       questions,
     });
+    const io = req.app.get("io"); 
+    io.to(opponentEmail).emit("challenge-requested", {
+      from: challenger.email,
+      difficulty,
+      duelId: duel._id,
+    });
 
     res.json({ duelId: duel._id });
   } catch (err) {
     res.status(500).json({ message: "Server error" });
   }
 });
+
+// GET /api/duel/ongoing
+router.get("/ongoing", authMiddleware, async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    const duels = await Duel.find({
+      status: "pending",
+      $or: [
+        { challenger: userId },
+        { opponentEmail: req.user.email }
+      ]
+    }).populate("challenger", "email");
+
+    res.json(duels);
+  } catch (err) {
+    console.error("Error fetching ongoing duels:", err.message);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
 
 // POST /api/duel/submit
 router.post(

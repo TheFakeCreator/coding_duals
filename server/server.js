@@ -14,17 +14,18 @@ dotenv.config();
 connectDB();
 
 const app = express();
-
-// Create HTTP server
 const server = http.createServer(app);
 
-// Initialize Socket.IO
+// Attach Socket.IO server
 const io = new SocketIOServer(server, {
   cors: {
-    origin: "http://localhost:5173", // Your frontend address (Vite default port)
+    origin: "http://localhost:5173", // Vite frontend origin
     methods: ["GET", "POST"],
   },
 });
+
+// Make Socket.IO accessible in routes
+app.set("io", io);
 
 // Middleware
 app.use(cors());
@@ -39,29 +40,39 @@ app.use("/api/duel", duelRoutes);
 io.on("connection", (socket) => {
   console.log(`✅ Client connected: ${socket.id}`);
 
-  // Join a specific duel room
+  // Register socket with user's email
+  socket.on("register-user", (email) => {
+    socket.join(email); // Use email as private room
+    console.log(`📧 Socket ${socket.id} registered as ${email}`);
+  });
+
+  // Join duel room
   socket.on("join-duel", ({ duelId, peerId }) => {
     socket.join(duelId);
     socket.to(duelId).emit("peer-connected", peerId);
     console.log(`📥 Socket ${socket.id} joined duel ${duelId}`);
   });
 
-  // Relay code changes to the opponent
+
+  // Handle real-time code sync
   socket.on("code-change", ({ duelId, code }) => {
     socket.to(duelId).emit("code-update", code);
   });
 
+  // Disconnect
   socket.on("disconnect", () => {
     console.log(`👋 Client disconnected: ${socket.id}`);
   });
 });
 
-// Add error handling for unhandled routes
+
+
+// Fallback for unhandled routes
 app.use((req, res) => {
   res.status(404).send("Not Found");
 });
 
-// Start the server
+// Start server
 const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);

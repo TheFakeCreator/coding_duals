@@ -1,5 +1,5 @@
 // Updated to use Vite's environment variables
-const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:5000/api";
+const API_BASE = "http://localhost:5000/api";
 
 // Added error handling for network failures
 export const fetchWithErrorHandling = async (url, options = {}) => {
@@ -27,6 +27,7 @@ export const loginUser = async (email, password) => {
   if (!res.ok) throw new Error(data.message || "Login failed");
   return data;
 };
+
 
 export const checkEmailExists = async (email) => {
   const res = await fetch(`${API_BASE}/auth/verify-email`, {

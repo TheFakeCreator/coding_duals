@@ -1,4 +1,4 @@
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom"; // Import useNavigate
 import { useEffect, useState, useRef } from "react";
 import Editor from "@monaco-editor/react";
 import socket from "../Utils/socket"; // Import the socket instance
@@ -9,6 +9,7 @@ import useTimer from "../Hooks/useTimer"; // Import the custom hook for timer
 
 export default function DuelArena() {
   const { id } = useParams();
+  const navigate = useNavigate(); // Initialize useNavigate
   const [problem, setProblem] = useState({
     title: "Two Sum",
     description:
@@ -111,6 +112,17 @@ export default function DuelArena() {
     setUserCode(value);
     // Emit the code change to the opponent
     socket.emit("code-change", { duelId: id, code: value });
+  };
+
+  const handleTerminateDuel = () => {
+    // Emit a socket event to terminate the duel
+    socket.emit("terminate-duel", { duelId: id });
+
+    // Optionally, handle UI updates after termination
+    alert("The duel has been terminated.");
+
+    // Navigate back to the dashboard after termination
+    navigate("/dashboard");
   };
 
   useEffect(() => {
@@ -223,6 +235,16 @@ export default function DuelArena() {
           {"\n"}
           <strong>Output:</strong> {problem.output}
         </pre>
+      </div>
+
+      {/* Terminate Duel Button */}
+      <div className="mt-6 text-center">
+        <button
+          className="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg"
+          onClick={handleTerminateDuel}
+        >
+          Terminate Duel
+        </button>
       </div>
     </div>
   );
